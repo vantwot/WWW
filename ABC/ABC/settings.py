@@ -10,22 +10,29 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+from concurrent.futures import process
 from pathlib import Path
+import environ
+import os
+
+env = environ.Env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Take environment variables from .env file
+environ.Env.read_env()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9#uet!^qykb!(a1lid6lj!+^moot^kqt2a*mth*3@q^4^*g4)i'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://abcproject1.herokuapp.com/']
+ALLOWED_HOSTS = ['https://abcproject1.herokuapp.com/', '*']
 
 
 # Application definition
@@ -76,11 +83,11 @@ WSGI_APPLICATION = 'ABC.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'd9suj1l8evbfeo',
-        'USER': 'jrilnwhtkhrhva',
-        'PASSWORD': '6075de440e6ac8944301f38d79afc5114fb73bc966bdedc7264c891056d398f5',
-        'HOST': 'ec2-44-196-223-128.compute-1.amazonaws.com',
-        'DATABASE_PORT': '5432',
+        'NAME': env('SQL_NAME'),
+        'USER': env('SQL_USER'),
+        'PASSWORD': env('SQL_PASSWORD'),
+        'HOST': env('SQL_HOST'),
+        'PORT': 5432,
     }
 }
 
