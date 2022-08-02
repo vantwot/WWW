@@ -5,6 +5,5 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('posts/', views.PostView.as_view(), name= 'posts_list'),
+    path('posts/<str:pk>', views.PostView.as_view(), name='detalles'),
 ]
-urlpatterns += static(settings.MEDIA_URL,
-                          document_root=settings.MEDIA_ROOT)
