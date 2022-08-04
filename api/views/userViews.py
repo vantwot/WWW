@@ -11,74 +11,41 @@ from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 import datetime, jwt
 
-# Create your views here.
-class RegisterView(APIView):
-  def post(self, request):
-    serializer = UserSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
-    return Response(serializer.data)
+from django.shortcuts import redirect
+from rest_framework import generics
+from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from ..models.userModels import User
+from ..serializers.userSerializers import UserSerializer, UserLoginSerializer, UserLogoutSerializer
 
-class LoginView(APIView):
-  def post(self, request):
-    email = request.data['email']
-    password = request.data['password']
 
-    user = User.objects.filter(email=email).first()
+class Record(generics.ListCreateAPIView):
+    # get method handler
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
-    if user is None:
-      raise AuthenticationFailed('User not found')
 
-    if not user.check_password(password):
-      raise AuthenticationFailed('Incorrect Password')
+class Login(generics.GenericAPIView):
+    # get method handler
+    queryset = User.objects.all()
+    serializer_class = UserLoginSerializer
 
-    payload = {
-      "id": user.id,
-      "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-      "iat": datetime.datetime.utcnow()
-    }
+    def post(self, request, *args, **kwargs):
+        serializer_class = UserLoginSerializer(data=request.data)
+        if serializer_class.is_valid(raise_exception=True):
+            return Response(serializer_class.data, status=HTTP_200_OK)
+        return Response(serializer_class.errors, status=HTTP_400_BAD_REQUEST)
 
-    token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')
 
-    response =  Response()
+class Logout(generics.GenericAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserLogoutSerializer
 
-    response.set_cookie(key='jwt', value=token, httponly=True)
-    response.data = {
-      'jwt': token
-    }
-
-    return response
-
-class UserAuthorizedView(APIView):
-  
-  """@method_decorator(csrf_exempt)
-  def dispatch(self, request, *args, **kwargs):
-    return super().dispatch(request, *args, **kwargs)"""
-
-  def get(self, request):
-    token = request.COOKIES.get('jwt')
-
-    if not token:
-      raise AuthenticationFailed('Unauthorized')
-
-    try:
-      payload = jwt.decode(token, 'secret', algorithm=['HS256'])
-    except jwt.ExpiredSignatureError:
-      raise AuthenticationFailed('Unauthorized')
-
-    user = User.objects.filter(id=payload['id']).first()
-    serializer = UserSerializer(user)
-
-    return Response(serializer.data)
-
-class LogoutView(APIView):
-  def post(self, request):
-    response = Response()
-    response.delete_cookie('jwt')
-    response.data = {
-      'message': 'success'
-    }
-    return response
+    def post(self, request, *args, **kwargs):
+        serializer_class = UserLogoutSerializer(data=request.data)
+        if serializer_class.is_valid(raise_exception=True):
+            return Response(serializer_class.data, status=HTTP_200_OK)
+        return Response(serializer_class.errors, status=HTTP_400_BAD_REQUEST)
 
 class UserView(APIView):
   @method_decorator(csrf_exempt)
@@ -88,19 +55,19 @@ class UserView(APIView):
     
   def get(self, req, id=0):
     if id>0:
-        users = list(User.objects.filter(id=id).values())
+        users = list(User.objects.filter(id=id).values('id', 'username', 'first_name', 'last_name', 'email', 'adress', 'identification', 'token', 'password', 'role'))
         if len(users)>0:
           user = users[0]
           datos = {'message': 'Success', 'users': user}
         else:
-          datos = {'message': 'Error'}
+          datos = {'message': 'Error', "users": []}
         return JsonResponse(datos)
     else: 
-      users = list(User.objects.values())
+      users = list(User.objects.values('id', 'username', 'first_name', 'last_name', 'email', 'adress', 'identification', 'token'))
       if len(users)>0:
         datos = {'message': 'Success', 'users': users}
       else:
-        datos = {'message': 'Error'}
+        datos = {'message': 'Error', "users": []}
       return JsonResponse(datos)
 
   def post(self, req):
@@ -114,9 +81,14 @@ class UserView(APIView):
     users = list(User.objects.filter(id=id).values())
     if len(users)>0:
       user = User.objects.get(id=id)
-      user.name=jd['name']
-      user.lastname=jd['lastname']
+      user.username=jd['username']
+      user.first_name=jd['first_name']
       user.adress=jd['adress']
+      user.email=jd['email']
+      user.identification=jd['identification']
+      user.password=jd['password']
+      user.role=jd['role']
+      user.last_name=jd['last_name']
       user.save()
       datos = {'message': 'Success'}
     else:
