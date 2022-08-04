@@ -1,0 +1,7 @@
+Django==4.0
+djangorestframework==3.11.0
+psycopg2-binary>=2.8
+django-environ>=0.8.1
+django-cors-headers>=3.13.0
+Pillow
+pytz==2021.1
