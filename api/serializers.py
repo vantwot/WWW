@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from api.models.eventos import Eventos
+from .models import Post
 
-class EventosSerializer(serializers.ModelSerializer):
+class PostSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Eventos
-        fields = 'id', 'title', 'description'
+        model = Post
+        fields = '__all__'
