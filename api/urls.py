@@ -3,6 +3,8 @@ from .views.userViews  import Record, Login, Logout, UserView
 from django.urls import path, include
 from .views.userViews import UserView
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = [
@@ -15,3 +17,6 @@ urlpatterns = [
     path('users/<int:id>', UserView.as_view(), name='user-info'),
 
 ]
+urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)
+
